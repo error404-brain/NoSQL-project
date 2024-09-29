@@ -14,16 +14,18 @@ export const searchPackages = async (query) => {
     }
 };
 
-export const createCustomer = async (customer) => {
+export const createCustomerwithAddress = async (customerData, addressDataList) => {
     try {
-        const response = await axios.post(`${BASE_URL}/customers`, customer);
+        const response = await axios.post(`${BASE_URL}/customers/create`, {
+            customerData,
+            addressDataList
+        });
         return response.data;
     } catch (error) {
-        console.error('Error creating customer:', error);
+        console.error('Error creating customer with address:', error);
         throw error;
     }
-}
-
+};
 export const searchCustomersByPhone = async (query) => {
     try {
         const response = await axios.get(`${BASE_URL}/customers/search`, {
