@@ -1,16 +1,23 @@
 const CustomerService = require('../services/customer.services');
 
-// Tạo khách hàng
-const createCustomer = async (req, res) => {
+const createCustomerWithAddress = async (req, res) => {
     try {
-        const customer = await CustomerService.createCustomer(req.body);
-        res.status(201).json(customer);
+        const { customerData, addressDataList } = req.body;
+
+        // Gọi service để kiểm tra và tạo khách hàng cùng danh sách địa chỉ
+        const { customer, addresses } = await CustomerService.createCustomerWithAddress(customerData, addressDataList);
+
+        res.status(201).json({
+            message: 'Khách hàng và địa chỉ đã được tạo thành công!',
+            customer,
+            addresses
+        });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        console.error('Error in createCustomerWithAddress:', error);
+        res.status(500).json({ message: error.message });
     }
 };
 
-// Lấy tất cả khách hàng
 const getAllCustomers = async (req, res) => {
     try {
         const customers = await CustomerService.getAllCustomers();
@@ -20,7 +27,6 @@ const getAllCustomers = async (req, res) => {
     }
 };
 
-// Tìm kiếm khách hàng
 const searchCustomers = async (req, res) => {
     try {
         const customers = await CustomerService.searchCustomers(req.query);
@@ -31,7 +37,7 @@ const searchCustomers = async (req, res) => {
 };
 
 module.exports = {
-    createCustomer,
     getAllCustomers,
-    searchCustomers
+    searchCustomers,
+    createCustomerWithAddress,
 };

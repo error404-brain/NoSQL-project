@@ -1,22 +1,34 @@
 import React, { useState } from 'react';
-import { searchPackages, searchCustomersByPhone, createCustomer } from './Api'; // Import API functions
+import { createCustomerwithAddress, searchCustomersByPhone, searchPackages } from './api'; // Import API từ backend
 import { FaUser, FaPhone, FaEnvelope, FaBox, FaShippingFast } from 'react-icons/fa'; // Import icons
 
 const Tracking = () => {
     const [activeTab, setActiveTab] = useState('traCuu'); // Default tab is 'Tra cứu'
-    const [selectedOption, setSelectedOption] = useState(''); // State for selected search option
-    const [trackingNumbers, setTrackingNumbers] = useState(''); // State for tracking numbers input
-    const [phoneNumber, setPhoneNumber] = useState(''); // State for customer phone number input
+    const [selectedOption, setSelectedOption] = useState(''); // Search option state
+    const [trackingNumbers, setTrackingNumbers] = useState(''); // State for tracking numbers
+    const [phoneNumber, setPhoneNumber] = useState(''); // Customer phone number
     const [newCustomer, setNewCustomer] = useState({
+        customerCode: '',
         customerName: '',
         phoneNumber: '',
-        email: '',
-        addresses: ''
-    }); // New customer state
-    const [customerResults, setCustomerResults] = useState(null); // Customer search results
+        email: ''
+    }); // Customer form data
+    const [newAddresses, setNewAddresses] = useState([{
+        addressCode: '',
+        customerCode: '',
+        receiverName: '',
+        phoneNumber: '',
+        addressDetails: '',
+        country: '',
+        postalCode: ''
+    }]); // Array of addresses
+    const [customerResults, setCustomerResults] = useState(null); // Customer search result
     const [packageResults, setPackageResults] = useState([]); // Package search results
     const [isSearching, setIsSearching] = useState(false); // Searching state
-    const [isCreating, setIsCreating] = useState(false); // Creating customer state
+    const [isCreating, setIsCreating] = useState(false); // Creating state
+    const [errorMessage, setErrorMessage] = useState(null); // Error message state
+    const [successMessage, setSuccessMessage] = useState(null); // Success message state
+    const [selectedService, setSelectedService] = useState(''); // Chọn dịch vụ
 
     // Handle tab switching (Tra cứu vs Dịch vụ)
     const handleTabClick = (tabName) => {
@@ -24,53 +36,110 @@ const Tracking = () => {
         setSelectedOption(''); // Reset search option when switching tabs
     };
 
+    // Add a new address
+    const handleAddAddress = () => {
+        setNewAddresses([
+            ...newAddresses,
+            {
+                addressCode: '',
+                customerCode: newCustomer.customerCode,
+                receiverName: '',
+                phoneNumber: '',
+                addressDetails: '',
+                country: '',
+                postalCode: ''
+            }
+        ]);
+    };
+
+    // Handle address input change
+    const handleAddressChange = (index, field, value) => {
+        const updatedAddresses = [...newAddresses];
+        updatedAddresses[index][field] = value;
+        setNewAddresses(updatedAddresses);
+    };
+
+    // Create new customer with multiple addresses
+    const handleCreateCustomer = async () => {
+        setIsCreating(true);
+        setErrorMessage(null);
+        setSuccessMessage(null);
+
+        try {
+            // Make sure each address has the same customer code
+            const updatedAddresses = newAddresses.map(address => ({
+                ...address,
+                customerCode: newCustomer.customerCode
+            }));
+
+            // Call API to create customer with multiple addresses
+            await createCustomerwithAddress(newCustomer, updatedAddresses);
+
+            // Show success message and reset form
+            setSuccessMessage('Khách hàng và địa chỉ đã được tạo thành công!');
+            setNewCustomer({
+                customerCode: '',
+                customerName: '',
+                phoneNumber: '',
+                email: ''
+            });
+            setNewAddresses([{
+                addressCode: '',
+                customerCode: '',
+                receiverName: '',
+                phoneNumber: '',
+                addressDetails: '',
+                country: '',
+                postalCode: ''
+            }]);
+        } catch (error) {
+            setErrorMessage(error.response?.data?.message || 'Có lỗi xảy ra khi tạo khách hàng.');
+        } finally {
+            setIsCreating(false);
+        }
+    };
+
     // Search customers by phone number
     const handleSearchCustomersByPhone = async () => {
         setIsSearching(true);
+        setErrorMessage(null);
+        setSuccessMessage(null);
         try {
             const result = await searchCustomersByPhone({ phoneNumber });
             if (result.length > 0) {
-                setCustomerResults(result[0]); // Expecting only one customer per phone number
+                setCustomerResults(result[0]); // Expecting one customer per phone number
+                setSuccessMessage('Khách hàng đã được tìm thấy.');
             } else {
-                alert('Không tìm thấy khách hàng');
+                setCustomerResults(null);
+                setErrorMessage('Không tìm thấy khách hàng.');
             }
         } catch (error) {
             console.error('Error searching customers:', error);
+            setErrorMessage('Có lỗi xảy ra khi tìm kiếm khách hàng.');
         } finally {
             setIsSearching(false);
         }
     };
 
-    // Search packages
+    // Search packages by tracking number
     const handleSearchPackages = async () => {
         const packageCodes = trackingNumbers.split(',').map(code => code.trim());
         setIsSearching(true);
+        setErrorMessage(null);
         try {
             const results = await searchPackages({ packageCode: packageCodes.join(',') });
-            setPackageResults(results);
+            if (results.length > 0) {
+                setPackageResults(results);
+                setSuccessMessage('Bưu phẩm đã được tìm thấy.');
+            } else {
+                setPackageResults([]);
+                setErrorMessage('Không tìm thấy bưu phẩm.');
+            }
         } catch (error) {
             console.error('Error searching packages:', error);
+            setErrorMessage('Có lỗi xảy ra khi tìm kiếm bưu phẩm.');
         } finally {
             setIsSearching(false);
-        }
-    };
-
-    // Create new customer
-    const handleCreateCustomer = async () => {
-        setIsCreating(true);
-        try {
-            await createCustomer(newCustomer);
-            alert('Tạo khách hàng thành công!');
-            setNewCustomer({
-                customerName: '',
-                phoneNumber: '',
-                email: '',
-                addresses: ''
-            });
-        } catch (error) {
-            console.error('Error creating customer:', error);
-        } finally {
-            setIsCreating(false);
         }
     };
 
@@ -135,6 +204,10 @@ const Tracking = () => {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Display error message */}
+                            {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+                            {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
                         </div>
                     )}
 
@@ -176,6 +249,10 @@ const Tracking = () => {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Display error message */}
+                            {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+                            {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
                         </div>
                     )}
                 </div>
@@ -184,41 +261,123 @@ const Tracking = () => {
             {/* Dịch vụ Section */}
             {activeTab === 'dichVu' && (
                 <div className="bg-gray-100 shadow-md rounded-lg p-6">
-                    <h2 className="text-xl font-bold mb-4">Tạo tài khoản khách hàng mới</h2>
-                    <input
-                        type="text"
-                        value={newCustomer.customerName}
-                        onChange={(e) => setNewCustomer({ ...newCustomer, customerName: e.target.value })}
-                        placeholder="Tên khách hàng"
+                    <h2 className="text-xl font-bold mb-4">Chọn loại dịch vụ</h2>
+                    <select
+                        value={selectedService}
+                        onChange={(e) => setSelectedService(e.target.value)}
                         className="w-full p-3 border border-gray-300 rounded-md mb-4"
-                    />
-                    <input
-                        type="text"
-                        value={newCustomer.phoneNumber}
-                        onChange={(e) => setNewCustomer({ ...newCustomer, phoneNumber: e.target.value })}
-                        placeholder="Số điện thoại"
-                        className="w-full p-3 border border-gray-300 rounded-md mb-4"
-                    />
-                    <input
-                        type="text"
-                        value={newCustomer.email}
-                        onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
-                        placeholder="Email"
-                        className="w-full p-3 border border-gray-300 rounded-md mb-4"
-                    />
-                    <input
-                        type="text"
-                        value={newCustomer.addresses}
-                        onChange={(e) => setNewCustomer({ ...newCustomer, addresses: e.target.value })}
-                        placeholder="Địa chỉ"
-                        className="w-full p-3 border border-gray-300 rounded-md mb-4"
-                    />
-                    <button
-                        onClick={handleCreateCustomer}
-                        className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg"
                     >
-                        {isCreating ? 'Đang tạo tài khoản...' : 'TẠO TÀI KHOẢN'}
-                    </button>
+                        <option value="">Chọn dịch vụ...</option>
+                        <option value="createCustomer">Tạo khách hàng mới</option>
+                    </select>
+
+                    {/* Hiển thị form tạo khách hàng nếu chọn "Tạo khách hàng mới" */}
+                    {selectedService === 'createCustomer' && (
+                        <>
+                            <h2 className="text-xl font-bold mb-4">Tạo tài khoản khách hàng mới</h2>
+                            {/* Thông tin khách hàng */}
+                            <input
+                                type="text"
+                                value={newCustomer.customerCode}
+                                onChange={(e) => setNewCustomer({ ...newCustomer, customerCode: e.target.value })}
+                                placeholder="Mã khách hàng"
+                                className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                            />
+
+                            <input
+                                type="text"
+                                value={newCustomer.customerName}
+                                onChange={(e) => setNewCustomer({ ...newCustomer, customerName: e.target.value })}
+                                placeholder="Tên khách hàng"
+                                className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                            />
+
+                            <input
+                                type="text"
+                                value={newCustomer.phoneNumber}
+                                onChange={(e) => setNewCustomer({ ...newCustomer, phoneNumber: e.target.value })}
+                                placeholder="Số điện thoại"
+                                className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                            />
+
+                            <input
+                                type="email"
+                                value={newCustomer.email}
+                                onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                                placeholder="Email"
+                                className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                            />
+
+                            <h3 className="text-lg font-bold mb-2">Thông tin địa chỉ</h3>
+
+                            {/* Danh sách địa chỉ */}
+                            {newAddresses.map((address, index) => (
+                                <div key={index} className="mb-6">
+                                    <input
+                                        type="text"
+                                        value={address.addressCode}
+                                        onChange={(e) => handleAddressChange(index, 'addressCode', e.target.value)}
+                                        placeholder="Mã địa chỉ"
+                                        className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={address.receiverName}
+                                        onChange={(e) => handleAddressChange(index, 'receiverName', e.target.value)}
+                                        placeholder="Tên người nhận"
+                                        className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={address.phoneNumber}
+                                        onChange={(e) => handleAddressChange(index, 'phoneNumber', e.target.value)}
+                                        placeholder="Số điện thoại người nhận"
+                                        className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={address.addressDetails}
+                                        onChange={(e) => handleAddressChange(index, 'addressDetails', e.target.value)}
+                                        placeholder="Địa chỉ"
+                                        className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={address.country}
+                                        onChange={(e) => handleAddressChange(index, 'country', e.target.value)}
+                                        placeholder="Quốc gia"
+                                        className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={address.postalCode}
+                                        onChange={(e) => handleAddressChange(index, 'postalCode', e.target.value)}
+                                        placeholder="Mã bưu chính"
+                                        className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                                    />
+                                </div>
+                            ))}
+
+                            {/* Nút thêm địa chỉ */}
+                            <button onClick={handleAddAddress} className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4">
+                                Thêm địa chỉ
+                            </button>
+
+                            {/* Nút tạo tài khoản */}
+                            <button
+                                onClick={handleCreateCustomer}
+                                className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg"
+                            >
+                                {isCreating ? 'Đang tạo tài khoản...' : 'TẠO TÀI KHOẢN'}
+                            </button>
+
+                            {/* Hiển thị thông báo lỗi nếu có */}
+                            {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+
+                            {/* Hiển thị thông báo thành công */}
+                            {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
+                        </>
+                    )}
                 </div>
             )}
         </div>
