@@ -4,7 +4,6 @@ const createCustomerWithAddress = async (req, res) => {
     try {
         const { customerData, addressDataList } = req.body;
 
-        // Gọi service để kiểm tra và tạo khách hàng cùng danh sách địa chỉ
         const { customer, addresses } = await CustomerService.createCustomerWithAddress(customerData, addressDataList);
 
         res.status(201).json({
