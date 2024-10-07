@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createCustomerwithAddress, searchCustomersByPhone, searchPackages } from './api'; // Import API từ backend
+import { createCustomerwithAddress, searchCustomersByPhone, searchCustomersByEmail, searchPackages } from './api'; // Import API từ backend
 import { FaUser, FaPhone, FaEnvelope, FaBox, FaShippingFast } from 'react-icons/fa'; // Import icons
 
 const Tracking = () => {
@@ -7,6 +7,7 @@ const Tracking = () => {
     const [selectedOption, setSelectedOption] = useState(''); // Search option state
     const [trackingNumbers, setTrackingNumbers] = useState(''); // State for tracking numbers
     const [phoneNumber, setPhoneNumber] = useState(''); // Customer phone number
+    const [email, setEmail] = useState(''); // Customer email
     const [newCustomer, setNewCustomer] = useState({
         customerCode: '',
         customerName: '',
@@ -121,6 +122,27 @@ const Tracking = () => {
         }
     };
 
+    const handleSearchCustomersByEmail = async () => {
+        setIsSearching(true);
+        setErrorMessage(null);
+        setSuccessMessage(null);
+        try {
+            const result = await searchCustomersByEmail({ email });
+            if (result.length > 0) {
+                setCustomerResults(result[0]); // Expecting one customer per phone number
+                setSuccessMessage('Khách hàng đã được tìm thấy.');
+            } else {
+                setCustomerResults(null);
+                setErrorMessage('Không tìm thấy khách hàng.');
+            }
+        } catch (error) {
+            console.error('Error searching customers:', error);
+            setErrorMessage('Có lỗi xảy ra khi tìm kiếm khách hàng.');
+        } finally {
+            setIsSearching(false);
+        }
+    };
+
     // Search packages by tracking number
     const handleSearchPackages = async () => {
         const packageCodes = trackingNumbers.split(',').map(code => code.trim());
@@ -173,13 +195,14 @@ const Tracking = () => {
                             className="w-full p-3 border border-gray-300 rounded-md"
                         >
                             <option value="">Chọn tra cứu...</option>
-                            <option value="khachHang">Tra cứu khách hàng</option>
+                            <option value="khachHangDienThoai">Tra cứu khách hàng bằng điện thoại</option>
+                            <option value="khachHangEmail">Tra cứu khách hàng bằng email</option>
                             <option value="buuPham">Tra cứu bưu phẩm</option>
                         </select>
                     </div>
 
-                    {/* Tra cứu khách hàng */}
-                    {selectedOption === 'khachHang' && (
+                    {/* Tra cứu khách hàng bằng số điện thoại*/}
+                    {selectedOption === 'khachHangDienThoai' && (
                         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
                             <h2 className="text-xl font-bold mb-4">Tra cứu khách hàng</h2>
                             <input
@@ -190,6 +213,39 @@ const Tracking = () => {
                                 className="w-full p-3 border border-gray-300 rounded-md mb-4"
                             />
                             <button onClick={handleSearchCustomersByPhone} className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg">
+                                {isSearching ? 'Đang tìm kiếm...' : 'TRA CỨU KHÁCH HÀNG'}
+                            </button>
+
+                            {/* Display customer results */}
+                            {customerResults && (
+                                <div className="mt-6 bg-gray-50 p-4 rounded-md shadow-sm">
+                                    <h3 className="text-lg font-bold mb-2">Thông tin khách hàng:</h3>
+                                    <div className="space-y-2">
+                                        <p><FaUser className="mr-2 inline-block text-indigo-600" /> Tên: {customerResults.customerName}</p>
+                                        <p><FaPhone className="mr-2 inline-block text-indigo-600" /> Số điện thoại: {customerResults.phoneNumber}</p>
+                                        <p><FaEnvelope className="mr-2 inline-block text-indigo-600" /> Email: {customerResults.email}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Display error message */}
+                            {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+                            {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
+                        </div>
+                    )}
+
+                    {/* Tra cứu khách hàng bằng email */}
+                    {selectedOption === 'khachHangEmail' && (
+                        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+                            <h2 className="text-xl font-bold mb-4">Tra cứu khách hàng</h2>
+                            <input
+                                type="text"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="Nhập email"
+                                className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                            />
+                            <button onClick={handleSearchCustomersByEmail} className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg">
                                 {isSearching ? 'Đang tìm kiếm...' : 'TRA CỨU KHÁCH HÀNG'}
                             </button>
 

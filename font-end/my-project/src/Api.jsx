@@ -28,7 +28,19 @@ export const createCustomerwithAddress = async (customerData, addressDataList) =
 };
 export const searchCustomersByPhone = async (query) => {
     try {
-        const response = await axios.get(`${BASE_URL}/customers/search`, {
+        const response = await axios.get(`${BASE_URL}/customers/search-by-phone`, {
+            params: query
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error searching customers:', error);
+        throw error;
+    }
+}
+
+export const searchCustomersByEmail = async (query) => {
+    try {
+        const response = await axios.get(`${BASE_URL}/customers/search-by-email`, {
             params: query
         });
         return response.data;
