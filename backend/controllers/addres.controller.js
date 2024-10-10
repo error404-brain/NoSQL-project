@@ -1,34 +1,46 @@
-const adđressService = require('../services/addres.services');
+const adđressService = require("../services/addres.services");
 
 const createAddress = async (req, res) => {
-    try {
-        const address = await adđressService.createAddress(req.body);
-        res.status(201).json(address);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+  try {
+    const address = await adđressService.createAddress(req.body);
+    res.status(201).json(address);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+const getAddressesByCustomerCode = async (req, res) => {
+  try {
+    const addresses = await adđressService.getAddressesByCustomerCode(req.query);
+    res.status(200).json(addresses);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 };
 
 const getAllAddresses = async (req, res) => {
-    try {
-        const addresses = await adđressService.getAllAddresses();
-        res.status(200).json(addresses);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-};  
-
-const getAddressById = async (req, res) => {
-    try {
-        const address = await adđressService.getAddressById(req.params.id);
-        res.status(200).json(address);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
-    }
+  try {
+    const addresses = await adđressService.getAllAddresses();
+    res.status(200).json(addresses);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
 };
 
+const getAddressById = async (req, res) => {
+  try {
+    const address = await adđressService.getAddressById(req.params.id);
+    res.status(200).json(address);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+// TODO: update Address
+
 module.exports = {
- createAddress, 
- getAllAddresses,
- getAddressById
- };
+  createAddress,
+  getAllAddresses,
+  getAddressesByCustomerCode,
+  getAddressById,
+};
