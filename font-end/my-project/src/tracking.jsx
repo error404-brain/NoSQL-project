@@ -36,7 +36,13 @@ const Tracking = () => {
       country: "",
       postalCode: "",
     },
-  ]); // Array of addresses
+  ]);
+  const [newOrder, setNewOrder] = useState({
+    customerName: "",
+    customerAddress: "",
+    service: "", // ID dịch vụ
+    total_price: 0, // Tổng giá
+  }); // Array of addresses
   const [updateCustomer, setUpdateCustomer] = useState(null);
   const [updateAddresses, setUpdateAddresses] = useState([]); // Array of addresses
   const [updatePackage, setUpdatePackage] = useState(null);
@@ -301,6 +307,28 @@ const Tracking = () => {
       setIsUpdating(false);
     }
   };
+  const handleCreateOrder = async () => {
+    setIsCreating(true);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+
+    try {
+      // Gọi API để tạo đơn hàng
+      await createOrder(newOrder);
+      setSuccessMessage("Đơn hàng đã được tạo thành công!");
+      // Reset form
+      setNewOrder({
+        customerName: "",
+        customerAddress: "",
+        service: "",
+        total_price: 0,
+      });
+    } catch (error) {
+      setErrorMessage(error.response?.data?.message || "Có lỗi xảy ra khi tạo đơn hàng.");
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -506,6 +534,7 @@ const Tracking = () => {
             <option value="createCustomer">Tạo khách hàng mới</option>
             <option value="updateCustomer">Cập nhật khách hàng</option>
             <option value="updatePackageStatus">Cập nhật trạng thái gói hàng</option>
+            <option value="createOrder">Tạo đơn hàng mới</option>
           </select>
 
           {/* Hiển thị form tạo khách hàng nếu chọn "Tạo khách hàng mới" */}
@@ -840,6 +869,52 @@ const Tracking = () => {
               )}
 
               {/* Display error message */}
+              {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+              {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
+            </>
+          )}
+          {selectedService === "createOrder" && (
+            <>
+              {/* Thông tin đơn hàng */}
+              <input
+                type="text"
+                value={newOrder.customerName}
+                placeholder="Tên khách hàng"
+                className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                onChange={(e) => setNewOrder({ ...newOrder, customerName: e.target.value })}
+              />
+
+              <input
+                type="text"
+                value={newOrder.customerAddress}
+                placeholder="Địa chỉ"
+                className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                onChange={(e) => setNewOrder({ ...newOrder, customerAddress: e.target.value })}
+              />
+
+              <input
+                type="text"
+                value={newOrder.service}
+                placeholder="ID Dịch vụ"
+                className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                onChange={(e) => setNewOrder({ ...newOrder, service: e.target.value })}
+              />
+
+              <input
+                type="number"
+                value={newOrder.total_price}
+                placeholder="Tổng giá"
+                className="w-full p-3 border border-gray-300 rounded-md mb-4"
+                onChange={(e) => setNewOrder({ ...newOrder, total_price: parseFloat(e.target.value) })}
+              />
+
+              {/* Nút tạo đơn hàng */}
+              <button
+                onClick={handleCreateOrder}
+                className="w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg"
+              >
+                {isCreating ? "Đang tạo đơn hàng..." : "TẠO ĐƠN HÀNG"}
+              </button>
               {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
               {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
             </>
