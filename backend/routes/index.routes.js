@@ -8,7 +8,7 @@ const packageRoutes = require('./package.routes');
 
 router.use('/customers', customerRoutes);
 router.use('/addresses', addressRoutes);
-router.use('/orders', orderRoutes);  // Sử dụng route cho Order
+router.use('/orders', orderRoutes);  
 router.use('/packages', packageRoutes);
 
 module.exports = router;

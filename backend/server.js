@@ -7,7 +7,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173", // Chỉ cho phép từ nguồn này
+    origin: "http://localhost:5173",
   })
 );
 
