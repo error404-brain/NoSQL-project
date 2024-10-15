@@ -11,7 +11,26 @@ const searchOrders = async ({ orderCode }) => {
     return await Order.find({ orderCode: { $regex: orderCode, $options: 'i' } });
 };
 
+const updateOrder = async (orderCode, updateData) => {
+    return await Order.findOneAndUpdate(
+      { orderCode },
+      updateData,
+      { new: true }
+    );
+  }
+
+  const deleteOrder = async (orderCode) => {
+    return await Order.findOneAndDelete({ orderCode });
+  };
+
+  const getAllOrders = async () => {
+    return await Order.find();
+  };
+
 module.exports = {
     createOrder,
-    searchOrders
+    searchOrders,
+    updateOrder,
+    deleteOrder,
+    getAllOrders
 };
