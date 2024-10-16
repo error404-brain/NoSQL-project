@@ -12,7 +12,7 @@ const createOrder = async (req, res) => {
 
 // Controller để tra cứu đơn hàng theo mã đơn hàng
 const searchOrder = async (req, res) => {
-  const { orderCode } = req.query; // Lấy orderCode từ query string
+  const { orderCode } = req.query; 
   try {
     if (!orderCode) {
       return res.status(400).json({ message: "Vui lòng cung cấp mã đơn hàng" });
@@ -27,6 +27,7 @@ const searchOrder = async (req, res) => {
   }
 };
 
+// Cập nhật đơn hàng
 const updateOrder = async (req, res) => {
   const { orderCode } = req.params;
   try {
@@ -40,6 +41,7 @@ const updateOrder = async (req, res) => {
   }
 };
 
+// Xóa đơn hàng (chỉ khi trạng thái là "Hủy")
 const deleteOrder = async (req, res) => {
   const { orderCode } = req.params;
   try {
@@ -53,6 +55,7 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+// Lấy tất cả đơn hàng
 const getAllOrders = async (req, res) => {
   try {
     const orders = await orderService.getAllOrders();
@@ -61,7 +64,6 @@ const getAllOrders = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 module.exports = {
   createOrder,
