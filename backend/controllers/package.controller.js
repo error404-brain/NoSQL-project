@@ -42,9 +42,22 @@ const getPackagesByPackageCode = async (req, res) => {
 
 // TODO: Update package
 
+const updatePackagesWithOrderCode = async (req, res) => {
+  const { orderCode, packages } = req.body; // Lấy orderCode và danh sách gói hàng từ request body
+  try {
+    // Cập nhật từng gói hàng với orderCode
+    await Package.updateMany({ packageCode: { $in: packages } }, { orderCode: orderCode });
+    res.status(200).json({ message: "Các gói hàng đã được cập nhật với mã đơn hàng." });
+  } catch (error) {
+    res.status(500).json({ message: "Có lỗi xảy ra khi cập nhật gói hàng." });
+  }
+};
+
+
 module.exports = {
   createPackage,
   updatePackage,
   getAllPackages,
   getPackagesByPackageCode,
+  updatePackagesWithOrderCode,
 };

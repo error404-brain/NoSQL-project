@@ -7,8 +7,10 @@ import {
   searchCustomersByCode,
   getAddressesByCustomerCode,
   searchPackages,
-  searchOrders,
   updatePackageWithCode,
+  createOrder,
+  deleteOrder,
+  updateOrderWithCode
 } from "./api"; // Import API từ backend
 import { FaUser, FaPhone, FaEnvelope, FaBox, FaShippingFast } from "react-icons/fa"; // Import icons
 
@@ -37,6 +39,18 @@ const Tracking = () => {
       postalCode: "",
     },
   ]); // Array of addresses
+
+  const [newOrder, setNewOrder] = useState({
+    orderCode: "",
+    customerCode: "",
+    receiverCode: "",
+    packages: [],
+    orderStatus: "Đang xử lý",
+  }); // State quản lý đơn hàng mới
+  
+  const [updateOrder, setUpdateOrder] = useState(null); // State cho đơn hàng cần cập nhật
+  
+
   const [updateCustomer, setUpdateCustomer] = useState(null);
   const [updateAddresses, setUpdateAddresses] = useState([]); // Array of addresses
   const [updatePackage, setUpdatePackage] = useState(null);
@@ -56,6 +70,55 @@ const Tracking = () => {
     setErrorMessage(""); // Reset error message when switching tabs
     setSuccessMessage(""); // Reset success message when switching tabs
   };
+
+
+  // Tạo đơn hàng mới
+const handleCreateOrder = async () => {
+  setIsCreating(true);
+  setErrorMessage(null);
+  setSuccessMessage(null);
+
+  try {
+    // Gọi API tạo đơn hàng
+    await createOrder(newOrder);
+
+    // Hiển thị thông báo thành công và reset form
+    setSuccessMessage("Đơn hàng đã được tạo thành công!");
+    setNewOrder({
+      orderCode: "",
+      customerCode: "",
+      receiverCode: "",
+      packages: [],
+      orderStatus: "Đang xử lý",
+    });
+  } catch (error) {
+    setErrorMessage(error.response?.data?.message || "Có lỗi xảy ra khi tạo đơn hàng.");
+  } finally {
+    setIsCreating(false);
+  }
+};
+
+
+// Cập nhật trạng thái đơn hàng
+const handleUpdateOrder = async () => {
+  setIsUpdating(true);
+  setErrorMessage(null);
+  setSuccessMessage(null);
+
+  try {
+    // Gọi API để cập nhật đơn hàng
+    await updateOrderWithCode(updateOrder);
+
+    // Hiển thị thông báo thành công và reset form
+    setSuccessMessage("Đơn hàng đã được cập nhật thành công!");
+    setUpdateOrder(null);
+  } catch (error) {
+    setErrorMessage(error.response?.data?.message || "Có lỗi xảy ra khi cập nhật đơn hàng.");
+  } finally {
+    setIsUpdating(false);
+  }
+};
+
 
   // Add a new address
   const handleAddAddress = () => {
@@ -301,6 +364,21 @@ const Tracking = () => {
       setIsUpdating(false);
     }
   };
+
+
+  const handleCreateOder = async () =>{
+
+  }
+
+  
+  const handleUpdateOder = async () =>{
+    
+  }
+
+  const handleDeleteOder = async () =>{
+
+  }
+
 
   return (
     <div className="container mx-auto p-4">
@@ -838,6 +916,103 @@ const Tracking = () => {
                   </button>
                 </>
               )}
+            {selectedService === "createOrder" && (
+  <>
+    <h2 className="text-xl font-bold mb-4">Tạo đơn hàng mới</h2>
+
+    <input
+      type="text"
+      value={newOrder.orderCode}
+      onChange={(e) => setNewOrder({ ...newOrder, orderCode: e.target.value })}
+      placeholder="Mã đơn hàng"
+      className="w-full p-3 border border-gray-300 rounded-md mb-4"
+    />
+
+    <input
+      type="text"
+      value={newOrder.customerCode}
+      onChange={(e) => setNewOrder({ ...newOrder, customerCode: e.target.value })}
+      placeholder="Mã khách hàng"
+      className="w-full p-3 border border-gray-300 rounded-md mb-4"
+    />
+
+    <input
+      type="text"
+      value={newOrder.receiverCode}
+      onChange={(e) => setNewOrder({ ...newOrder, receiverCode: e.target.value })}
+      placeholder="Mã người nhận"
+      className="w-full p-3 border border-gray-300 rounded-md mb-4"
+    />
+
+    <input
+      type="text"
+      value={newOrder.packages}
+      onChange={(e) => setNewOrder({ ...newOrder, packages: [e.target.value] })}
+      placeholder="Mã bưu phẩm"
+      className="w-full p-3 border border-gray-300 rounded-md mb-4"
+    />
+
+    <select
+      value={newOrder.orderStatus}
+      onChange={(e) => setNewOrder({ ...newOrder, orderStatus: e.target.value })}
+      className="w-full p-3 border border-gray-300 rounded-md mb-4"
+    >
+      <option value="Đang xử lý">Đang xử lý</option>
+      <option value="Đang giao">Đang giao</option>
+      <option value="Đã giao">Đã giao</option>
+      <option value="Hủy">Hủy</option>
+    </select>
+
+    <button
+      onClick={handleCreateOrder}
+      className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg"
+    >
+      {isCreating ? "Đang tạo đơn hàng..." : "TẠO ĐƠN HÀNG"}
+    </button>
+
+    {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+    {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
+  </>
+)}
+
+
+{selectedService === "updateOrderStatus" && (
+  <>
+    <h2 className="text-xl font-bold mb-4">Cập nhật trạng thái đơn hàng</h2>
+
+    <input
+      type="text"
+      value={updateOrder?.orderCode || ""}
+      onChange={(e) => setUpdateOrder({ ...updateOrder, orderCode: e.target.value })}
+      placeholder="Nhập mã đơn hàng"
+      className="w-full p-3 border border-gray-300 rounded-md mb-4"
+    />
+
+    <select
+      value={updateOrder?.orderStatus || ""}
+      onChange={(e) => setUpdateOrder({ ...updateOrder, orderStatus: e.target.value })}
+      className="w-full p-3 border border-gray-300 rounded-md mb-4"
+    >
+      <option value="">Chọn trạng thái đơn hàng...</option>
+      <option value="Đang xử lý">Đang xử lý</option>
+      <option value="Đang giao">Đang giao</option>
+      <option value="Đã giao">Đã giao</option>
+      <option value="Hủy">Hủy</option>
+    </select>
+
+    <button
+      onClick={handleUpdateOrder}
+      className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg"
+    >
+      {isUpdating ? "Đang cập nhật đơn hàng..." : "CẬP NHẬT ĐƠN HÀNG"}
+    </button>
+
+    {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
+    {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
+  </>
+)}
+
+
 
               {/* Display error message */}
               {errorMessage && <p className="text-red-500 mt-4">{errorMessage}</p>}
